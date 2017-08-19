@@ -28,7 +28,7 @@ def load_vgg(sess, vgg_path):
     #   Use tf.saved_model.loader.load to load the model and weights
 
     vgg_tag = 'vgg16'
-    graph_def = tf.saved_model.loader.load(sess, [vgg_tag], vgg_path)
+    tf.saved_model.loader.load(sess, [vgg_tag], vgg_path)
 
     vgg_input_tensor_name = 'image_input:0'
     vgg_keep_prob_tensor_name = 'keep_prob:0'
