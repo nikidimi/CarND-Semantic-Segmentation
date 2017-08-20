@@ -77,7 +77,7 @@ def optimize(nn_last_layer, correct_label, learning_rate, num_classes):
         logits=logits, labels=correct_label)
     cost = tf.reduce_mean(cross_entropy_loss)
     optimizer = tf.train.AdamOptimizer().minimize(cost)
-    return logits, optimizer, cross_entropy_loss
+    return logits, optimizer, cost
 tests.test_optimize(optimize)
 
 
@@ -130,9 +130,9 @@ def run():
 
         image_input, keep_prob, layer3_out, layer4_out, layer7_out = load_vgg(sess, vgg_path)
         last_layer = layers(layer3_out, layer4_out, layer7_out, num_classes)
-        logits, optimizer, cross_entropy_loss = optimize(last_layer, output, 0.1, num_classes)
+        logits, optimizer, cost = optimize(last_layer, output, 0.1, num_classes)
 
-        train_nn(sess, 20, 32, get_batches_fn, optimizer, cross_entropy_loss,
+        train_nn(sess, 20, 32, get_batches_fn, optimizer, cost,
                  image_input, output, keep_prob, None)
 
         helper.save_inference_samples(runs_dir, data_dir, sess, image_shape,
