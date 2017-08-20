@@ -54,11 +54,14 @@ def layers(vgg_layer3_out, vgg_layer4_out, vgg_layer7_out, num_classes):
     :return: The Tensor for the last layer of output
     """
     layer = tf.layers.conv2d(vgg_layer7_out, num_classes, 1, strides=(1, 1))
-    layer = tf.layers.conv2d_transpose(layer, 512, 4, strides=(2, 2))
+    layer = tf.layers.conv2d_transpose(layer, 512, 4, strides=(2, 2),
+                                       padding='SAME')
     layer = tf.add(layer, vgg_layer4_out)
-    layer = tf.layers.conv2d_transpose(layer, 256, 4, strides=(2, 2))
+    layer = tf.layers.conv2d_transpose(layer, 256, 4, strides=(2, 2),
+                                       padding='SAME')
     layer = tf.add(layer, vgg_layer3_out)
-    layer = tf.layers.conv2d_transpose(layer, num_classes, 16, strides=(8, 8))
+    layer = tf.layers.conv2d_transpose(layer, num_classes, 16, strides=(8, 8),
+                                       padding='SAME')
     return layer
 tests.test_layers(layers)
 
@@ -130,7 +133,7 @@ def run():
         # Create function to get batches
         get_batches_fn = helper.gen_batch_function(os.path.join(data_dir, 'data_road/training'), image_shape)
 
-        output = tf.placeholder(tf.float32, [None, 160, 576, 3])
+        output = tf.placeholder(tf.float32, [None, 160, 576, num_classes])
 
         # OPTIONAL: Augment Images for better results
         #  https://datascience.stackexchange.com/questions/5224/how-to-prepare-augment-images-for-neural-network
@@ -140,8 +143,8 @@ def run():
         last_layer = layers(layer3_out, layer4_out, layer7_out, num_classes)
         logits, optimizer, cross_entropy_loss = optimize(last_layer, output, 0.1, num_classes)
 
-        train_nn(sess, 10, 100, get_batches_fn, optimizer, cross_entropy_loss,
-                 image_input, output, 0.5, 0.1)
+        train_nn(sess, 10, 10, get_batches_fn, optimizer, cross_entropy_loss,
+                 image_input, output, keep_prob, None)
 
         # TODO: Train NN using the train_nn function
 
