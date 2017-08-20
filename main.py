@@ -103,11 +103,12 @@ def train_nn(sess, epochs, batch_size, get_batches_fn, train_op, cross_entropy_l
     # TODO: Implement function
     sess.run(tf.global_variables_initializer())
     for e in range(epochs):
-        for x, y in get_batches_fn(batch_size):
+        for i, x, y in enumerate(get_batches_fn(batch_size)):
             feed = {input_image: x,
                     correct_label: y,
                     keep_prob: 0.5}
             loss, _ = sess.run([cross_entropy_loss, train_op], feed_dict=feed)
+            print("epoch: %d iter: %d, loss: %d".format(e, i, loss))
 
     pass
 tests.test_train_nn(train_nn)
