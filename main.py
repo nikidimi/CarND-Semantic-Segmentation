@@ -24,9 +24,6 @@ def load_vgg(sess, vgg_path):
     :param vgg_path: Path to vgg folder, containing "variables/" and "saved_model.pb"
     :return: Tuple of Tensors from VGG model (image_input, keep_prob, layer3_out, layer4_out, layer7_out)
     """
-    # TODO: Implement function
-    #   Use tf.saved_model.loader.load to load the model and weights
-
     vgg_tag = 'vgg16'
     tf.saved_model.loader.load(sess, [vgg_tag], vgg_path)
 
@@ -80,7 +77,6 @@ def optimize(nn_last_layer, correct_label, learning_rate, num_classes):
         logits=logits, labels=correct_label)
     cost = tf.reduce_mean(cross_entropy_loss)
     optimizer = tf.train.AdamOptimizer().minimize(cost)
-    # TODO: Implement function
     return logits, optimizer, cross_entropy_loss
 tests.test_optimize(optimize)
 
@@ -124,10 +120,6 @@ def run():
     # Download pretrained vgg model
     helper.maybe_download_pretrained_vgg(data_dir)
 
-    # OPTIONAL: Train and Inference on the cityscapes dataset instead of the Kitti dataset.
-    # You'll need a GPU with at least 10 teraFLOPS to train on.
-    #  https://www.cityscapes-dataset.com/
-
     with tf.Session() as sess:
         # Path to vgg model
         vgg_path = os.path.join(data_dir, 'vgg')
@@ -136,26 +128,15 @@ def run():
 
         output = tf.placeholder(tf.float32, [None, 160, 576, num_classes])
 
-        # OPTIONAL: Augment Images for better results
-        #  https://datascience.stackexchange.com/questions/5224/how-to-prepare-augment-images-for-neural-network
-
-        # TODO: Build NN using load_vgg, layers, and optimize function
         image_input, keep_prob, layer3_out, layer4_out, layer7_out = load_vgg(sess, vgg_path)
         last_layer = layers(layer3_out, layer4_out, layer7_out, num_classes)
         logits, optimizer, cross_entropy_loss = optimize(last_layer, output, 0.1, num_classes)
 
-        train_nn(sess, 1, 32, get_batches_fn, optimizer, cross_entropy_loss,
+        train_nn(sess, 20, 32, get_batches_fn, optimizer, cross_entropy_loss,
                  image_input, output, keep_prob, None)
 
         helper.save_inference_samples(runs_dir, data_dir, sess, image_shape,
                                       logits, keep_prob, image_input)
-
-        # TODO: Train NN using the train_nn function
-
-        # TODO: Save inference data using helper.save_inference_samples
-        #  helper.save_inference_samples(runs_dir, data_dir, sess, image_shape, logits, keep_prob, input_image)
-
-        # OPTIONAL: Apply the trained model to a video
 
 
 if __name__ == '__main__':
