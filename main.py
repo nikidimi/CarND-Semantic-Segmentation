@@ -53,8 +53,13 @@ def layers(vgg_layer3_out, vgg_layer4_out, vgg_layer7_out, num_classes):
     :param num_classes: Number of classes to classify
     :return: The Tensor for the last layer of output
     """
-    # TODO: Implement function
-    return None
+    layer = tf.layers.conv2d(vgg_layer7_out, num_classes, 1, strides=(1, 1))
+    layer = tf.layers.conv2d_transpose(layer, 512, 4, strides=(2, 2))
+    layer = tf.add(layer, vgg_layer4_out)
+    layer = tf.layers.conv2d_transpose(layer, 256, 4, strides=(2, 2))
+    layer = tf.add(layer, vgg_layer3_out)
+    layer = tf.layers.conv2d_transpose(layer, num_classes, 16, strides=(8, 8))
+    return layer
 tests.test_layers(layers)
 
 
@@ -67,8 +72,13 @@ def optimize(nn_last_layer, correct_label, learning_rate, num_classes):
     :param num_classes: Number of classes to classify
     :return: Tuple of (logits, train_op, cross_entropy_loss)
     """
+    logits = tf.reshape(nn_last_layer, (-1, num_classes))
+    cross_entropy_loss = tf.nn.softmax_cross_entropy_with_logits(
+        logits=logits, labels=correct_label)
+    cost = tf.reduce_mean(cross_entropy_loss)
+    optimizer = tf.train.AdamOptimizer().minimize(cost)
     # TODO: Implement function
-    return None, None, None
+    return logits, optimizer, cross_entropy_loss
 tests.test_optimize(optimize)
 
 
@@ -88,6 +98,14 @@ def train_nn(sess, epochs, batch_size, get_batches_fn, train_op, cross_entropy_l
     :param learning_rate: TF Placeholder for learning rate
     """
     # TODO: Implement function
+    sess.run(tf.global_variables_initializer())
+    for e in range(epochs):
+        for x, y in get_batches_fn(batch_size):
+            feed = {input_image: x,
+                    correct_label: y,
+                    keep_prob: 0.5}
+            loss, _ = sess.run([cross_entropy_loss, train_op], feed_dict=feed)
+
     pass
 tests.test_train_nn(train_nn)
 
@@ -112,10 +130,18 @@ def run():
         # Create function to get batches
         get_batches_fn = helper.gen_batch_function(os.path.join(data_dir, 'data_road/training'), image_shape)
 
+        output = tf.placeholder(tf.float32, [None, 160, 576, 3])
+
         # OPTIONAL: Augment Images for better results
         #  https://datascience.stackexchange.com/questions/5224/how-to-prepare-augment-images-for-neural-network
 
         # TODO: Build NN using load_vgg, layers, and optimize function
+        image_input, keep_prob, layer3_out, layer4_out, layer7_out = load_vgg(sess, vgg_path)
+        last_layer = layers(layer3_out, layer4_out, layer7_out, num_classes)
+        logits, optimizer, cross_entropy_loss = optimize(last_layer, output, 0.1, num_classes)
+
+        train_nn(sess, 10, 100, get_batches_fn, optimizer, cross_entropy_loss,
+                 image_input, output, 0.5, 0.1)
 
         # TODO: Train NN using the train_nn function
 
